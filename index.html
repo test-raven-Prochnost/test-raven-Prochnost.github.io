@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Visual Interactivo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #4269f73f;
+        }
+
+        .quiz-container {
+            background-color: rgb(126, 158, 184);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #000000;
+        }
+
+        .question-container {
+            margin-bottom: 40px;
+            display: none;
+        }
+
+        .question-container.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        .question {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #000000;
+        }
+
+        .main-image {
+            display: block;
+            margin: 0 auto;
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 80px;
+            /* Aumenté este espacio de 20px a 40px */
+        }
+
+        .options-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            padding-top: 10px;
+            /* Añadido para más espacio arriba */
+        }
+
+        .option {
+            width: calc(25% - 8px);
+            /* 4 opciones en una fila con pequeño espacio entre ellas */
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            border-radius: 5px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            background-color: #00a2ff4b;
+        }
+
+        .option:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .option img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .option.correct {
+            box-shadow: 0 0 0 3px #27ae60;
+        }
+
+        .option.incorrect {
+            box-shadow: 0 0 0 3px #e74c3c;
+        }
+
+        .feedback {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+            display: none;
+        }
+
+        .feedback.correct {
+            background-color: #d5f5e3;
+            color: #27ae60;
+        }
+
+        .feedback.incorrect {
+            background-color: #fadbd8;
+            color: #e74c3c;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 50px;
+            /* Aumentado de 20px a 30px */
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .progress {
+            margin-top: 20px;
+            background-color: #ecf0f1;
+            border-radius: 10px;
+            height: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: #3498db;
+            width: 0%;
+            transition: width 0.5s;
+        }
+
+        .results {
+            text-align: center;
+            display: none;
+        }
+
+        .score {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .option-label {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 5px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .option:has(.option-label) {
+            background-color: #00a2ff4b;
+            /* mismo fondo que las demás */
+            height: 25px;
+            /* altura visible */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+        }
+
+
+        /* Responsividad para pantallas pequeñas */
+        @media (max-width: 600px) {
+            .options-container {
+                flex-wrap: wrap;
+            }
+
+            .option {
+                width: calc(50% - 5px);
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="quiz-container">
+        <h1>Quiz Visual Interactivo</h1>
+
+        <div class="progress">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+
+        <div id="question-1" class="question-container active">
+            <div class="question">Pregunta 1: ¿Qué figura completa la secuencia?</div>
+            <img src="https://assets.yourselfirst.com/assets/iq/v2/1.svg" alt="Secuencia de formas geométricas"
+                class="main-image">
+            <div class="options-container">
+                <div class="option" onclick="selectOption(this, 1)">
+                    <img src="https://assets.yourselfirst.com/assets/iq/v2/1_a.svg" alt="Opción A">
+                </div>
+                <div class="option" onclick="selectOption(this, 1)">
+                    <img src="https://assets.yourselfirst.com/assets/iq/v2/1_b.svg" alt="Opción B">
+                </div>
+                <div class="option" data-correct="true" onclick="selectOption(this, 1)">
+                    <img src="https://assets.yourselfirst.com/assets/iq/v2/1_c.svg" alt="Opción C">
+                </div>
+                <div class="option" onclick="selectOption(this, 1)">
+                    <img src="https://assets.yourselfirst.com/assets/iq/v2/1_d.svg" alt="Opción D">
+                </div>
+            </div>
+            <div class="feedback" id="feedback-1"></div>
+            <div class="navigation">
+                <button disabled>Anterior</button>
+                <button onclick="nextQuestion(1)" disabled id="next-1">Siguiente</button>
+            </div>
+        </div>
+
+        <div id="question-2" class="question-container">
+            <div class="question">Pregunta 2: ¿Qué animal no forma parte de este grupo de animales?</div>
+            <div class="options-container">
+                <div class="option" onclick="selectOption(this, 2)">
+                    <img src="https://i.pinimg.com/736x/7e/84/0d/7e840dbaa516516f6e685d86b4e567ae.jpg" alt="Opción A">
+                </div>
+                <div class="option" onclick="selectOption(this, 2)">
+                    <img src="https://st3.depositphotos.com/1077687/15937/v/450/depositphotos_159375452-stock-illustration-monochrome-contour-of-trout-fish.jpg"
+                        alt="Opción B">
+                </div>
+                <div class="option" onclick="selectOption(this, 2)">
+                    <img src="https://i.pinimg.com/736x/b1/86/be/b186be109c78cf5453244a19fb95dd5a.jpg" alt="Opción C">
+                </div>
+                <div class="option" data-correct="true" onclick="selectOption(this, 2)">
+                    <img src="https://png.pngtree.com/png-clipart/20201230/ourlarge/pngtree-horse-clipart-black-and-white-happy-horse-png-image_2661358.jpg"
+                        alt=" Opción D">
+                </div>
+            </div>
+            <div class="feedback" id="feedback-2"></div>
+            <div class="navigation">
+                <button onclick="previousQuestion(2)">Anterior</button>
+                <button onclick="nextQuestion(2)" disabled id="next-2">Siguiente</button>
+            </div>
+        </div>
+
+        <div id="question-3" class="question-container">
+            <div class="question">Pregunta 3: ¿Qué palabra se parece más a "miedo"?</div>
+            <div class="options-container">
+                <div class="option" onclick="selectOption(this, 3)">
+                    <div class="option-label">Valentía</div>
+                </div>
+                <div class="option" onclick="selectOption(this, 3)">
+                    <div class="option-label">Alegría</div>
+                </div>
+                <div class="option" data-correct="true" onclick="selectOption(this, 3)">
+                    <div class="option-label">Terror</div>
+                </div>
+                <div class="option" onclick="selectOption(this, 3)">
+                    <div class="option-label">Confianza</div>
+                </div>
+            </div>
+            <div class="feedback" id="feedback-3"></div>
+            <div class="navigation">
+                <button onclick="previousQuestion(3)">Anterior</button>
+                <button onclick="nextQuestion(3)" disabled id="next-3">Siguiente</button>
+            </div>
+        </div>
+
+        <div id="question-4" class="question-container">
+            <div class="question">Pregunta 4: ¿Cual es la que encaja?</div>
+            <img src="https://assets.yourselfirst.com/assets/iq/v2/6.svg" alt="Secuencia de formas geométricas"
+                class="main-image">
+            <div class="options-container">
+                <div class="option" onclick="selectOption(this, 4)">
+                    <img src="https://assets.yourselfirst.com/assets/iq/v2/6_a.svg" alt="Opción A">
+                </div>
+                <div class="option" data-correct="true" onclick="selectOption(this, 4)">
+                    <img src="https://assets.yourselfirst.com/assets/iq/v2/6_b.svg" alt="Opción B">
+                </div>
+                <div class="option" onclick="selectOption(this, 4)">
+                    <img src="https://assets.yourselfirst.com/assets/iq/v2/6_c.svg" alt="Opción C">
+                </div>
+                <div class="option" onclick="selectOption(this, 4)">
+                    <img src="https://assets.yourselfirst.com/assets/iq/v2/6_d.svg" alt="Opción D">
+                </div>
+            </div>
+            <div class="feedback" id="feedback-4"></div>
+            <div class="navigation">
+                <button onclick="previousQuestion(4)">Anterior</button>
+                <button onclick="nextQuestion(4)" disabled id="next-4">Siguiente</button>
+            </div>
+        </div>
+
+        <div id="question-5" class="question-container">
+            <div class="question">Pregunta 5: ¿Cual es la secuencia?</div>
+            <img src="https://assets.yourselfirst.com/assets/iq/v2/8.svg" alt="Secuencia de formas geométricas"
+                class="main-image">
+            <div class="options-container">
+                <div class="option" onclick="selectOption(this, 5)">
+                    <img src="https://assets.yourselfirst.com/assets/iq/v2/8_a.svg" alt="Opción A">
+                </div>
+                <div class="option" onclick="selectOption(this, 5)">
+                    <img src="https://assets.yourselfirst.com/assets/iq/v2/8_b.svg" alt="Opción B">
+                </div>
+                <div class="option" data-correct="true" onclick="selectOption(this, 5)">
+                    <img src="https://assets.yourselfirst.com/assets/iq/v2/8_c.svg" alt="Opción C">
+                </div>
+                <div class="option" onclick="selectOption(this, 5)">
+                    <img src="https://assets.yourselfirst.com/assets/iq/v2/8_d.svg" alt="Opción D">
+                </div>
+            </div>
+            <div class="feedback" id="feedback-5"></div>
+            <div class="navigation">
+                <button onclick="previousQuestion(5)">Anterior</button>
+                <button onclick="nextQuestion(5)" disabled id="next-5">Siguiente</button>
+            </div>
+        </div>
+
+        <!-- NUEVAS PREGUNTAS -->
+        <div id="question-6" class="question-container">
+            <div class="question">Pregunta 6: En la siguiente frase, ¿qué significa la palabra meticuloso?</div>
+            <div class="options-container">
+                <div class="option" onclick="selectOption(this, 6)">
+                    <div class="option-label">Descuidado</div>
+                </div>
+                <div class="option" onclick="selectOption(this, 6)">
+                    <div class="option-label">Rápido</div>
+                </div>
+                <div class="option" data-correct="true" onclick="selectOption(this, 6)">
+                    <div class="option-label">Atención a los detalles</div>
+                </div>
+                <div class="option" onclick="selectOption(this, 6)">
+                    <div class="option-label">Confuso</div>
+                </div>
+            </div>
+            <div class="feedback" id="feedback-6"></div>
+            <div class="navigation">
+                <button onclick="previousQuestion(6)">Anterior</button>
+                <button onclick="nextQuestion(6)" disabled id="next-6">Siguiente</button>
+            </div>
+        </div>
+
+        <div id="question-7" class="question-container">
+            <div class="question">Pregunta 7: ¿Qué figura hace falta?</div>
+            <img src="https://assets.yourselfirst.com/assets/iq/v2/13.svg" alt="Secuencia de formas geométricas"
+                class="main-image">
+            <div class="options-container">
+                <div class="option" onclick="selectOption(this, 7)">
+                    <img src="https://assets.yourselfirst.com/assets/iq/v2/13_a.svg" alt="Amarillo">
+                </div>
+                <div class="option" onclick="selectOption(this, 7)">
+                    <img src="https://assets.yourselfirst.com/assets/iq/v2/13_b.svg" alt="Azul">
+                </div>
+                <div class="option" data-correct="true" onclick="selectOption(this, 7)">
+                    <img src="https://assets.yourselfirst.com/assets/iq/v2/13_c.svg" alt="Verde">
+                </div>
+                <div class="option" onclick="selectOption(this, 7)">
+                    <img src="https://assets.yourselfirst.com/assets/iq/v2/13_d.svg" alt="Naranja">
+                </div>
+            </div>
+            <div class="feedback" id="feedback-7"></div>
+            <div class="navigation">
+                <button onclick="previousQuestion(7)">Anterior</button>
+                <button onclick="nextQuestion(7)" disabled id="next-7">Siguiente</button>
+            </div>
+        </div>
+
+        <div id="question-8" class="question-container">
+            <div class="question">Pregunta 8: ¿Qué secuencia falta?</div>
+            <img src="https://assets.yourselfirst.com/assets/iq/v2/16.svg" alt="Secuencia de formas geométricas"
+                class="main-image">
+            <div class="options-container">
+                <div class="option" onclick="selectOption(this, 8)">
+                    <img src="https://assets.yourselfirst.com/assets/iq/v2/16_a.svg" alt="Amarillo">
+                </div>
+                <div class="option" onclick="selectOption(this, 8)">
+                    <img src="https://assets.yourselfirst.com/assets/iq/v2/16_b.svg" alt="Azul">
+                </div>
+                <div class="option" onclick="selectOption(this, 8)">
+                    <img src="https://assets.yourselfirst.com/assets/iq/v2/16_c.svg" alt="Verde">
+                </div>
+                <div class="option" data-correct="true" onclick="selectOption(this, 8)">
+                    <img src="https://assets.yourselfirst.com/assets/iq/v2/16_d.svg" alt="Naranja">
+                </div>
+            </div>
+            <div class="feedback" id="feedback-8"></div>
+            <div class="navigation">
+                <button onclick="previousQuestion(8)">Anterior</button>
+                <button onclick="nextQuestion(8)" disabled id="next-8">Siguiente</button>
+            </div>
+        </div>
+
+        <div id="question-9" class="question-container">
+            <div class="question">Pregunta 9: ¿Qué Triangulo le sigue?</div>
+            <img src="https://assets.yourselfirst.com/assets/iq/v2/17.svg" alt="Secuencia de formas geométricas"
+                class="main-image">
+            <div class="options-container">
+                <div class="option" onclick="selectOption(this, 9)">
+                    <img src="https://assets.yourselfirst.com/assets/iq/v2/17_a.svg" alt="Amarillo">
+                </div>
+                <div class="option" onclick="selectOption(this, 9)">
+                    <img src="https://assets.yourselfirst.com/assets/iq/v2/17_b.svg" alt="Azul">
+                </div>
+                <div class="option" onclick="selectOption(this, 9)">
+                    <img src="https://assets.yourselfirst.com/assets/iq/v2/17_c.svg" alt="Verde">
+                </div>
+                <div class="option" data-correct="true" onclick="selectOption(this, 9)">
+                    <img src="https://assets.yourselfirst.com/assets/iq/v2/17_d.svg" alt="Naranja">
+                </div>
+            </div>
+            <div class="feedback" id="feedback-9"></div>
+            <div class="navigation">
+                <button onclick="previousQuestion(9)">Anterior</button>
+                <button onclick="nextQuestion(9)" disabled id="next-9">Siguiente</button>
+            </div>
+        </div>
+
+        <div id="question-10" class="question-container">
+            <div class="question">Pregunta 10: ¿Qué variante encaja?</div>
+            <img src="https://assets.yourselfirst.com/assets/iq/v2/25.svg" alt="Secuencia de formas geométricas"
+                class="main-image">
+            <div class="options-container">
+                <div class="option" onclick="selectOption(this, 10)">
+                    <img src="https://assets.yourselfirst.com/assets/iq/v2/25_a.svg" alt="Amarillo">
+                </div>
+                <div class="option" onclick="selectOption(this, 10)">
+                    <img src="https://assets.yourselfirst.com/assets/iq/v2/25_b.svg" alt="Azul">
+                </div>
+                <div class="option" data-correct="true" onclick="selectOption(this, 10)">
+                    <img src="https://assets.yourselfirst.com/assets/iq/v2/25_c.svg" alt="Verde">
+                </div>
+                <div class="option" onclick="selectOption(this, 10)">
+                    <img src="https://assets.yourselfirst.com/assets/iq/v2/25_d.svg" alt="Naranja">
+                </div>
+            </div>
+            <div class="feedback" id="feedback-10"></div>
+            <div class="navigation">
+                <button onclick="previousQuestion(10)">Anterior</button>
+                <button onclick="showResults()" disabled id="next-10">Ver Resultados</button>
+            </div>
+        </div>
+
+        <div id="results" class="results">
+            <h2>¡Quiz Completado!</h2>
+            <div class="score" id="score">Tu puntuación: 0/10</div>
+            <button onclick="restartQuiz()">Reiniciar Quiz</button>
+        </div>
+    </div>
+
+    <script>
+        let currentQuestion = 1;
+        let score = 0;
+        let answers = { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false, 7: false, 8: false, 9: false, 10: false };
+
+        function selectOption(option, questionNumber) {
+            // Evitar selección múltiple
+            if (answers[questionNumber] !== false) {
+                return;
+            }
+
+            const isCorrect = option.hasAttribute('data-correct');
+            const feedback = document.getElementById(`feedback-${questionNumber}`);
+            const nextButton = document.getElementById(`next-${questionNumber}`);
+
+            // Marcar todas las opciones
+            const options = option.parentElement.children;
+            for (let i = 0; i < options.length; i++) {
+                options[i].classList.remove('correct', 'incorrect');
+                if (options[i] === option) {
+                    options[i].classList.add(isCorrect ? 'correct' : 'incorrect');
+                } else if (options[i].hasAttribute('data-correct')) {
+                    options[i].classList.add('correct');
+                }
+            }
+
+            // Mostrar feedback
+            feedback.textContent = isCorrect ? '¡Correcto!' : 'Incorrecto. Intenta de nuevo.';
+            feedback.className = `feedback ${isCorrect ? 'correct' : 'incorrect'}`;
+            feedback.style.display = 'block';
+
+            // Actualizar puntuación
+            if (isCorrect) {
+                score++;
+            }
+
+            // Registrar respuesta
+            answers[questionNumber] = true;
+
+            // Habilitar botón siguiente
+            nextButton.disabled = false;
+        }
+
+        function nextQuestion(questionNumber) {
+            document.getElementById(`question-${questionNumber}`).classList.remove('active');
+            document.getElementById(`question-${questionNumber + 1}`).classList.add('active');
+            currentQuestion = questionNumber + 1;
+            updateProgress();
+        }
+
+        function previousQuestion(questionNumber) {
+            document.getElementById(`question-${questionNumber}`).classList.remove('active');
+            document.getElementById(`question-${questionNumber - 1}`).classList.add('active');
+            currentQuestion = questionNumber - 1;
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const progressBar = document.getElementById('progress-bar');
+            progressBar.style.width = `${(currentQuestion - 1) * 10}%`;
+        }
+
+        function showResults() {
+            document.getElementById(`question-${currentQuestion}`).classList.remove('active');
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('score').textContent = `Tu puntuación: ${score}/10`;
+            document.getElementById('progress-bar').style.width = '100%';
+        }
+
+        function restartQuiz() {
+            score = 0;
+            currentQuestion = 1;
+            answers = { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false, 7: false, 8: false, 9: false, 10: false };
+
+            // Reiniciar todas las preguntas
+            for (let i = 1; i <= 10; i++) {
+                const question = document.getElementById(`question-${i}`);
+                question.classList.remove('active');
+
+                // Reiniciar opciones
+                const options = question.querySelectorAll('.option');
+                options.forEach(option => {
+                    option.classList.remove('correct', 'incorrect');
+                });
+
+                // Reiniciar feedback
+                const feedback = document.getElementById(`feedback-${i}`);
+                feedback.style.display = 'none';
+
+                // Deshabilitar botones siguiente
+                const nextButton = document.getElementById(`next-${i}`);
+                if (nextButton) {
+                    nextButton.disabled = true;
+                }
+            }
+
+            // Mostrar primera pregunta
+            document.getElementById('question-1').classList.add('active');
+            document.getElementById('results').style.display = 'none';
+            updateProgress();
+        }
+    </script>
+</body>
+
+</html>
